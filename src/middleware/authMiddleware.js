@@ -1,18 +1,8 @@
 import jwt from "jsonwebtoken";
-import User from "../models/User";
+import User from "../models/User.js";
 
-const response= await fetch("http://localhost:3000/api/books", {
-    method: "GET",
-    body: JSON.stringify({
-        title,
-        Caption
-    }),
-    headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-    },
-});
-  
+
+
 const protectRoute = async (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
