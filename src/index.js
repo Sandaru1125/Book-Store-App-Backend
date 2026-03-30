@@ -8,14 +8,18 @@ import bookRoutes from './routes/bookRoutes.js';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ✅ ADD THIS LINE
 app.use(express.json());
 app.use(cors());
 
-app.use("/api/auth", authRoutes);
-app.use("/api/books",bookRoutes);
+// ✅ ADD THIS
+app.get("/", (req, res) => {
+    res.send("Backend is running 🚀");
+});
 
-app.listen(PORT, () => {
+app.use("/api/auth", authRoutes);
+app.use("/api/books", bookRoutes);
+
+app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server is running on port ${PORT}`);
     constDBConnection();
 });
