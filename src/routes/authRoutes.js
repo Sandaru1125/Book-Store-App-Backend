@@ -76,7 +76,6 @@ router.post("/register", async (req, res) => {
 // LOGIN
 router.post("/login", async (req, res) => {
   try {
-
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -89,7 +88,9 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "User not found" });
     }
 
-    if (user.password !== password) {
+    const isMatch = await user.comparePassword(password);
+
+    if (!isMatch) {
       return res.status(400).json({ message: "Invalid password" });
     }
 
@@ -111,6 +112,5 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
 
 export default router;
