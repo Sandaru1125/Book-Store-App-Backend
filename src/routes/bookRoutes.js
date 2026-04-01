@@ -5,29 +5,22 @@ import protectRoute from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-
 // CREATE BOOK
 router.post("/", protectRoute, async (req, res) => {
   try {
+    const { title, caption, rating, image } = req.body;
 
-    const { title, author, description, price, coverImage } = req.body;
-
-    // Validation
-    if (!title || !author || !description || !price || !coverImage) {
+    if (!title || !caption || !rating || !image) {
       return res.status(400).json({ error: "All fields are required" });
     }
 
-    // Upload image to Cloudinary
-    const uploadResponse = await cloudinary.uploader.upload(coverImage);
-
-    const imageURL = uploadResponse.secure_url;
+    const uploadResponse = await cloudinary.uploader.upload(image);
 
     const newBook = new Book({
       title,
-      author,
-      description,
-      price,
-      coverImage: imageURL,
+      caption,
+      rating,
+      image: uploadResponse.secure_url,
       user: req.user._id,
     });
 
@@ -36,38 +29,18 @@ router.post("/", protectRoute, async (req, res) => {
     res.status(201).json(newBook);
 
   } catch (error) {
-    console.error(error);
     res.status(500).json({ error: "Failed to create book" });
   }
 });
 
-
-
-// GET ALL BOOKS WITH PAGINATION
+// GET ALL BOOKS
 router.get("/", async (req, res) => {
   try {
-
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-
-    const skip = (page - 1) * limit;
-
     const books = await Book.find()
       .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
       .populate("user", "username profilePicture");
 
-    const totalBooks = await Book.countDocuments();
-
-    const totalPages = Math.ceil(totalBooks / limit);
-
-    res.json({
-      books,
-      currentPage: page,
-      totalPages,
-      totalBooks,
-    });
+    res.json(books);
 
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch books" });
@@ -75,41 +48,44 @@ router.get("/", async (req, res) => {
 });
 
 
+router.get("/user", protectRoute, async (req, res) => {
+  try {
+    const books = await Book.find({ user: req.user._id })
+      .sort({ createdAt: -1 });
+
+    res.json(books);
+
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch user books" });
+  }
+});
 
 // DELETE BOOK
 router.delete("/:id", protectRoute, async (req, res) => {
   try {
-
     const book = await Book.findById(req.params.id);
 
     if (!book) {
       return res.status(404).json({ error: "Book not found" });
     }
 
-    // Check ownership
     if (book.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: "Forbidden" });
     }
 
-    // Delete image from Cloudinary
-    if (book.coverImage && book.coverImage.startsWith("http")) {
-      try {
-        const publicId = book.coverImage.split("/").pop().split(".")[0];
-        await cloudinary.uploader.destroy(publicId);
-      } catch (error) {
-        console.error("Cloudinary delete failed:", error);
-      }
+    // delete from cloudinary
+    if (book.image) {
+      const publicId = book.image.split("/").pop().split(".")[0];
+      await cloudinary.uploader.destroy(publicId);
     }
 
-    // Delete book from database
     await Book.findByIdAndDelete(req.params.id);
 
-    res.json({ message: "Book deleted successfully" });
+    res.json({ message: "Deleted successfully" });
 
   } catch (error) {
     res.status(500).json({ error: "Failed to delete book" });
   }
 });
-
 
 export default router;
