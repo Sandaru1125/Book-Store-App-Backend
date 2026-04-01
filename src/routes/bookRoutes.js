@@ -57,7 +57,9 @@ router.get("/", async (req, res) => {
 router.get("/user", protectRoute, async (req, res) => {
   try {
     const books = await Book.find({ user: req.user._id })
-      .sort({ createdAt: -1 });
+    
+      .sort({ createdAt: -1 })
+      .populate("user", "username profilePicture");
 
     res.json(books);
 
