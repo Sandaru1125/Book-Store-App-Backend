@@ -14,12 +14,14 @@ router.post("/", protectRoute, async (req, res) => {
       return res.status(400).json({ error: "All fields are required" });
     }
 
+    console.log("Creating book with data:", { title, caption, rating: Number(rating) });
+
     const uploadResponse = await cloudinary.uploader.upload(image);
 
     const newBook = new Book({
       title,
       caption,
-      rating,
+      rating: Number(rating),
       image: uploadResponse.secure_url,
       user: req.user._id,
     });
@@ -29,7 +31,11 @@ router.post("/", protectRoute, async (req, res) => {
     res.status(201).json(newBook);
 
   } catch (error) {
-    res.status(500).json({ error: "Failed to create book" });
+    console.error("Error creating book:", error);
+    res.status(500).json({ 
+      error: "Failed to create book",
+      details: error.message 
+    });
   }
 });
 
