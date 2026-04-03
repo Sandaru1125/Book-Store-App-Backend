@@ -43,7 +43,7 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "Username already exists" });
     }
 
-    const randomAvatar = `https://api.dicebear.com/6.x/avataaars/svg?seed=${username}`;
+    const randomAvatar = `https://api.dicebear.com/9.x/bottts/svg?seed=${username}`;
 
     const newUser = new User({
       email,
